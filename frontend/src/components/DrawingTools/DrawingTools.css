@@ -1,0 +1,85 @@
+.tools-container {
+  width: 5%;
+  height: 80%;
+  border: 1px solid #ccc;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.tools-title {
+  text-align: center;
+  font-size: 1.2vw;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.tools-icons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.tool-icon {
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.tool-icon:hover {
+  color: #4caf50;
+  transform: scale(1.1);
+}
+
+.eraser-size {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.eraser-size label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
+  font-size: 1vw;
+}
+
+.eraser-button {
+  padding: 5px 10px;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  font-size: 0.8vw;
+}
+
+.eraser-button:hover {
+  background-color: #e0e0e0;
+  transform: scale(1.05);
+}
+
+.eraser-button:active {
+  background-color: #d0d0d0;
+}
+
+.color-picker {
+  width: 30px;
+  height: 30px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: transform 0.3s ease;
+}
+
+.color-picker:hover {
+  transform: scale(1.1);
+}
