@@ -1,5 +1,5 @@
 import base64
-from workflow_apis.api.websocket_apis import queue_prompt, get_history, get_image
+from workflow_apis.api.websocket_apis import queue_prompt, get_history, get_image, upload_image
 # from workflow_apis.api.api_helpers import upload_image
 from workflow_apis.api.websocket_connection import open_websocket_connection
 import json, os
@@ -7,7 +7,26 @@ from requests_toolbelt import MultipartEncoder
 from PIL import Image
 import io
 
-def generate_image_by_prompt(prompt, output_path, save_previews=False):
+def generate_image_by_prompt_and_image(prompt, input_image_data, filename):
+    print('Inside generate_image_by_prompt_and_image')
+    ws = None
+    try:
+        ws, server_address, client_id = open_websocket_connection()
+
+        # Save input image temporarily
+        input_image_path = filename  # filename is the path already in prompt_image_to_image
+
+        upload_image(input_image_path, filename, server_address)
+        prompt_id = queue_prompt(prompt, client_id, server_address)['prompt_id']
+        track_progress(prompt, ws, prompt_id)
+        images = get_images(prompt_id, server_address)
+        encoded_images = save_image(images)
+        return encoded_images
+    finally:
+        if ws:
+            ws.close()
+
+def generate_image_by_prompt(prompt):
     print("Inside generate_image_by_prompt")
     ws = None
     try:
@@ -15,9 +34,9 @@ def generate_image_by_prompt(prompt, output_path, save_previews=False):
         prompt_id = queue_prompt(prompt, client_id, server_address)['prompt_id']
         print("Prompt ID: ", prompt_id)
         track_progress(prompt, ws, prompt_id)
-        images = get_images(prompt_id, server_address, save_previews)
+        images = get_images(prompt_id, server_address)
         print(f"Number of images retrieved: {len(images)}")
-        encoded_images = save_image(images, output_path, save_previews)
+        encoded_images = save_image(images)
         return encoded_images
     except ConnectionResetError as e:
         print(f"Connection was reset by the remote host: {e}")
@@ -30,7 +49,7 @@ def generate_image_by_prompt(prompt, output_path, save_previews=False):
             ws.close()
 
 # Send Image as base64
-def save_image(images, output_path, save_previews):
+def save_image(images):
     print("Inside save_image")
     encoded_images = []
     for i, image_dict in enumerate(images):
@@ -112,6 +131,6 @@ def get_images(prompt_id, server_address, allow_preview=False):
                 print(f"Retrieved image data for: {image['filename']}")
             except Exception as e:
                 print(f"Failed to retrieve image {image['filename']}: {e}")
-
+        print("output_images: " + str(output_images))
     return output_images
 

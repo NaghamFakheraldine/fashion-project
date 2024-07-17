@@ -7,10 +7,12 @@ from flask_cors import CORS
 import math
 from workflow_apis.actions.prompt_to_image import prompt_to_image
 from workflow_apis.api.load_workflow import load_workflow
+from workflow_apis.actions.image_to_image import prompt_image_to_image
 import os
 
 ALLOWED_EXTENSIONS = {'png', 'jpeg'}
 T2I_WORKFLOW_PATH = 'workflow_apis/workflows/T2I_workflow.json'
+R2I_WORKFLOW_PATH = 'workflow_apis/workflows/Ref2ImageAPI.json'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -157,41 +159,6 @@ def create_app():
         except Exception as e:
             print(f"Error getting images from S3: {e}")
             return jsonify({"error": "Failed to retrieve images"}), 500
-    
-    # Workflows
-    
-    # WORKFLOW_PATH = 'workflow_apis/workflows/T2I_workflow.json'
-
-    # @app.route("/api/generate-image-from-prompt", methods=["POST"])
-    # def generate_image_from_prompt():
-    #     try:
-    #         # Ensure the request content type is JSON
-    #         if request.content_type != 'application/json':
-    #             return jsonify({"error": "Content-Type must be application/json"}), 415
-
-    #         data = request.get_json()
-    #         print("generate_image_from_prompt Data: " + str(data))
-    #         positive_prompt = data.get("positive_prompt", "")
-    #         save_previews = data.get("save_previews", False)
-
-    #         if not positive_prompt:
-    #             return jsonify({"error": "positive_prompt is required"}), 400
-
-    #         workflow_json = load_workflow(WORKFLOW_PATH)
-    #         print("Workflow loaded successfully!")
-    #         if workflow_json is None:
-    #             return jsonify({"error": "Failed to load workflow"}), 500
-
-    #         image_paths = prompt_to_image(workflow_json, positive_prompt, save_previews)
-    #         if not image_paths:
-    #             return jsonify({"error": "Image generation failed"}), 500
-
-    #         print('image_paths: ' + str(image_paths))
-    #         return jsonify({"message": "Image generation successful", "image_urls": image_paths})
-
-    #     except Exception as e:
-    #         print(f"Error generating image: {str(e)}")
-    #         return jsonify({"error": "Failed to generate image"}), 500
 
     @app.route("/api/generate-image-from-prompt", methods=["POST"])
     def generate_image_from_prompt():
@@ -203,17 +170,16 @@ def create_app():
             data = request.get_json()
             print("generate_image_from_prompt Data: " + str(data))
             positive_prompt = data.get("positive_prompt", "")
-            save_previews = data.get("save_previews", False)
 
             if not positive_prompt:
-                return jsonify({"error": "positive_prompt is required"}), 400
+                return jsonify({"error": "Positive prompt is required"}), 400
 
             workflow_json = load_workflow(T2I_WORKFLOW_PATH)
             print("Workflow loaded successfully!")
             if workflow_json is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_to_image(workflow_json, positive_prompt, save_previews)
+            encoded_images = prompt_to_image(workflow_json, positive_prompt)
             if not encoded_images:
                 return jsonify({"error": "Image generation failed"}), 500
 
@@ -228,14 +194,34 @@ def create_app():
     @app.route("/api/generate-image-from-reference", methods=["POST"])
     def generate_image_from_reference():
         try:
-            if request.content_type != 'application/json':
-                return jsonify({"error": "Content-Type must be application/json"}), 415
-
             data = request.get_json()
-            print("generate_image_from_reference Data: " + str(data))
+            if not data or 'image' not in data or 'positive_prompt' not in data:
+                return jsonify({'error': 'Invalid input'}), 400
 
-            
+            image_base64 = data['image']
+            prompt_text = data['positive_prompt']
 
+            # Decode the base64 image
+            try:
+                input_image_data = base64.b64decode(image_base64)
+            except Exception as e:
+                return jsonify({'error': f'Failed to decode image: {e}'}), 500
+
+            workflow = load_workflow(R2I_WORKFLOW_PATH)
+            print("Workflow loaded successfully!")
+            if workflow is None:
+                return jsonify({"error": "Failed to load workflow"}), 500
+
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text)
+
+            if not encoded_images:
+                return jsonify({'error': 'Failed to generate image'}), 500
+
+            return jsonify({'images': encoded_images}), 200
+
+        except Exception as e:
+            print(f"Error generating image: {str(e)}")
+            return jsonify({"error": "Failed to generate image"}), 500
 
     return app
 
