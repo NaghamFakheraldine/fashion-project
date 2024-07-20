@@ -2,9 +2,6 @@ import React, { useRef, useEffect, useState } from "react";
 import CanvasDraw from "react-canvas-draw";
 import { useDrop } from "react-dnd";
 
-const SAVE_IMAGE_URL = "http://localhost:5000/api/save-image";
-
-let globalVariable = "";
 const Workspace = ({
   tool,
   color,
@@ -12,11 +9,10 @@ const Workspace = ({
   clearCanvasRef,
   undoRef,
   saveImageRef,
-  uploadToS3Ref,
+  onImageSave,
 }) => {
   const canvasRef = useRef(null);
   const [backgroundImage, setBackgroundImage] = useState(null);
-  const [backgroundImageUpload, setBackgroundImageUpload] = useState(null);
 
   const handleClear = () => {
     canvasRef.current.clear();
@@ -25,20 +21,9 @@ const Workspace = ({
   const handleUndo = () => {
     canvasRef.current.undo();
   };
-  useEffect(() => {
-    if (clearCanvasRef) {
-      clearCanvasRef.current = handleClear;
-    }
-    if (undoRef) {
-      undoRef.current = handleUndo;
-    }
-    if (saveImageRef) {
-      saveImageRef.current = saveImage;
-    }
-    if (uploadToS3Ref) {
-      uploadToS3Ref.current = uploadToS3;
-    }
-  }, [clearCanvasRef, undoRef, saveImageRef, uploadToS3Ref]);
+
+  clearCanvasRef.current = handleClear;
+  undoRef.current = handleUndo;
 
   const getBrushSettings = () => {
     if (tool === "highlighter") {
@@ -64,8 +49,9 @@ const Workspace = ({
   const [{ canDrop, isOver }, drop] = useDrop(() => ({
     accept: ["image", "savedImage"],
     drop: (item) => {
+      // Ensure the correct image data is used
+      console.log("Dropped image:", item.image); // Debugging line
       setBackgroundImage(item.image);
-      globalVariable =item.image;
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
@@ -93,91 +79,70 @@ const Workspace = ({
     }
   }, []);
 
-  const uploadToS3 = async () => {
-    const drawingCanvas = canvasRef.current.canvasContainer.children[1];
-    const hiddenCanvas = document.createElement("canvas");
-    hiddenCanvas.width = drawingCanvas.width;
-    hiddenCanvas.height = drawingCanvas.height;
-    const ctx = hiddenCanvas.getContext("2d");
+  // const saveImage = () => {
+  //   const drawingCanvas = canvasRef.current.canvasContainer.children[1];
+  //   const hiddenCanvas = document.createElement("canvas");
+  //   hiddenCanvas.width = 512;
+  //   hiddenCanvas.height = 512;
+  //   const ctx = hiddenCanvas.getContext("2d");
 
-    if (globalVariable) {
-      const img = new Image();
-      img.src = backgroundImage;
+  //   if (backgroundImage) {
+  //     const img = new Image();
+  //     img.crossOrigin = "anonymous"; // Ensure CORS is handled for external images
+  //     img.src = backgroundImage;
+  //     img.onload = () => {
+  //       ctx.drawImage(img, 0, 0, 512, 512);
+  //       ctx.drawImage(drawingCanvas, 0, 0, 512, 512);
 
-      img.onload = () => {
-        const aspectRatio = img.width / img.height;
-        const bgWidth = hiddenCanvas.width * 0.5;
-        const bgHeight = bgWidth / aspectRatio;
-        const xOffset = (hiddenCanvas.width - bgWidth) / 2;
-        const yOffset = (hiddenCanvas.height - bgHeight) / 2;
-
-        ctx.drawImage(img, xOffset, yOffset, bgWidth, bgHeight);
-        ctx.drawImage(drawingCanvas, 0, 0);
-      };
-    }
-
-    ctx.drawImage(drawingCanvas, 0, 0);
-
-    const dataURL = hiddenCanvas.toDataURL("image/png");
-
-    try {
-      const response = await fetch(SAVE_IMAGE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageData: dataURL,
-          originalFilename: "workspace-image.png",
-        }),
-      });
-
-      const responseData = await response.json();
-
-      if (response.status === 200) {
-        console.log("Image uploaded successfully:", responseData);
-      } else {
-        console.error("Failed to upload image:", responseData);
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    }
-  };
+  //       const link = document.createElement("a");
+  //       link.href = hiddenCanvas.toDataURL("image/png");
+  //       link.download = "workspace-image.png";
+  //       link.click();
+  //     };
+  //   } else {
+  //     ctx.drawImage(drawingCanvas, 0, 0, 512, 512);
+  //     const link = document.createElement("a");
+  //     link.href = hiddenCanvas.toDataURL("image/png");
+  //     link.download = "workspace-image.png";
+  //     link.click();
+  //   }
+  // };
 
   const saveImage = () => {
-    const drawingCanvas = canvasRef.current.canvasContainer.children[1];
-    const hiddenCanvas = document.createElement("canvas");
-    hiddenCanvas.width = drawingCanvas.width;
-    hiddenCanvas.height = drawingCanvas.height;
-    const ctx = hiddenCanvas.getContext("2d");
+    return new Promise((resolve, reject) => {
+      const drawingCanvas = canvasRef.current.canvasContainer.children[1];
+      const hiddenCanvas = document.createElement("canvas");
+      hiddenCanvas.width = 512;
+      hiddenCanvas.height = 512;
+      const ctx = hiddenCanvas.getContext("2d");
 
-    if (backgroundImage) {
-      const img = new Image();
-      img.src = backgroundImage;
+      if (backgroundImage) {
+        const img = new Image();
+        img.crossOrigin = "anonymous"; // Ensure CORS is handled for external images
+        img.src = backgroundImage;
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, 512, 512);
+          ctx.drawImage(drawingCanvas, 0, 0, 512, 512);
 
-      img.onload = () => {
-        const aspectRatio = img.width / img.height;
-        const bgWidth = hiddenCanvas.width * 0.5;
-        const bgHeight = bgWidth / aspectRatio;
-        const xOffset = (hiddenCanvas.width - bgWidth) / 2;
-        const yOffset = (hiddenCanvas.height - bgHeight) / 2;
-
-        ctx.drawImage(img, xOffset, yOffset, bgWidth, bgHeight);
-        ctx.drawImage(drawingCanvas, 0, 0);
-
-        const link = document.createElement("a");
-        link.href = hiddenCanvas.toDataURL("image/png");
-        link.download = "workspace-image.png";
-        link.click();
-      };
-    } else {
-      ctx.drawImage(drawingCanvas, 0, 0);
-      const link = document.createElement("a");
-      link.href = hiddenCanvas.toDataURL("image/png");
-      link.download = "workspace-image.png";
-      link.click();
-    }
+          resolve(hiddenCanvas.toDataURL("image/png"));
+        };
+      } else {
+        ctx.drawImage(drawingCanvas, 0, 0, 512, 512);
+        resolve(hiddenCanvas.toDataURL("image/png"));
+      }
+    });
   };
 
   saveImageRef.current = saveImage;
+
+  useEffect(() => {
+    const handleSaveImage = async () => {
+      const imageData = await saveImage();
+      onImageSave(imageData);
+    };
+
+    saveImageRef.current = handleSaveImage;
+  }, [onImageSave, saveImage]);
 
   return (
     <div
@@ -191,14 +156,21 @@ const Workspace = ({
         position: "relative",
         backgroundColor: "#f5f5f5",
         borderRadius: "10px",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
       }}
     >
       <h3 style={{ textAlign: "center" }}>Workspace</h3>
       <div
         style={{
-          width: "100%",
-          height: "90%",
+          width: "469px",
+          height: "512px",
           position: "relative",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
         }}
       >
         <CanvasDraw
@@ -210,11 +182,9 @@ const Workspace = ({
             background: "none",
             width: "100%",
             height: "100%",
-            backgroundImage: backgroundImage
-              ? `url(${backgroundImage})`
-              : "none",
+            backgroundImage: `url(${backgroundImage})`,
             backgroundPosition: "center",
-            backgroundSize: "50%",
+            backgroundSize: "contain",
             backgroundRepeat: "no-repeat",
             backgroundColor: "white",
             border: "solid 1px #ccc",

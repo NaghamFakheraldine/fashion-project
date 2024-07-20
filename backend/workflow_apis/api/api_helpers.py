@@ -1,26 +1,36 @@
 import base64
-from workflow_apis.api.websocket_apis import queue_prompt, get_history, get_image, upload_image
-# from workflow_apis.api.api_helpers import upload_image
-from workflow_apis.api.websocket_connection import open_websocket_connection
-import json, os
-from requests_toolbelt import MultipartEncoder
+import json
 from PIL import Image
-import io
+import io, boto3
+from workflow_apis.api.websocket_apis import queue_prompt, upload_image, get_history, get_image
+from workflow_apis.api.websocket_connection import open_websocket_connection
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
-def generate_image_by_prompt_and_image(prompt, input_image_data, filename):
-    print('Inside generate_image_by_prompt_and_image')
+BUCKET_NAME = 'image-flask-project'
+FOLDER_NAME = 'HistoryData/'
+
+
+def generate_image_by_prompt_and_image(prompt, input_image_bytes):
     ws = None
     try:
         ws, server_address, client_id = open_websocket_connection()
 
-        # Save input image temporarily
-        input_image_path = filename  # filename is the path already in prompt_image_to_image
+        upload_image(input_image_bytes, 'input_image.png', server_address)
 
-        upload_image(input_image_path, filename, server_address)
-        prompt_id = queue_prompt(prompt, client_id, server_address)['prompt_id']
+        prompt_response = queue_prompt(prompt, client_id, server_address)
+        prompt_id = prompt_response.get('prompt_id')
+        if not prompt_id:
+            raise ValueError("Failed to get prompt_id from queue_prompt response")
+
         track_progress(prompt, ws, prompt_id)
         images = get_images(prompt_id, server_address)
-        encoded_images = save_image(images)
+
+        encoded_images = [{'file_name': img['file_name'], 'encoded_image_data': base64.b64encode(img['image_data']).decode('utf-8')} for img in images]
+        
+        # Upload images to S3
+        for img in images:
+            upload_to_s3(img['image_data'], img['file_name'])
+
         return encoded_images
     finally:
         if ws:
@@ -37,6 +47,11 @@ def generate_image_by_prompt(prompt):
         images = get_images(prompt_id, server_address)
         print(f"Number of images retrieved: {len(images)}")
         encoded_images = save_image(images)
+        
+        # Upload images to S3
+        for img in images:
+            upload_to_s3(img['image_data'], img['file_name'])
+
         return encoded_images
     except ConnectionResetError as e:
         print(f"Connection was reset by the remote host: {e}")
@@ -48,7 +63,6 @@ def generate_image_by_prompt(prompt):
         if ws:
             ws.close()
 
-# Send Image as base64
 def save_image(images):
     print("Inside save_image")
     encoded_images = []
@@ -74,9 +88,7 @@ def save_image(images):
             print(f"Failed to process image {image_dict['file_name']}: {e}")
     return encoded_images
 
-
 def track_progress(prompt, ws, prompt_id):
-    # print('Inside Track Progress')
     node_ids = list(prompt.keys())
     finished_nodes = []
 
@@ -108,10 +120,8 @@ def track_progress(prompt, ws, prompt_id):
     return
 
 def get_images(prompt_id, server_address, allow_preview=False):
-    print('Inside Get Images')
     output_images = []
     history = get_history(prompt_id, server_address).get(prompt_id, {})
-    print(f"History for prompt_id {prompt_id}: {history}")
 
     if not history:
         print("No history found for this prompt_id.")
@@ -122,15 +132,23 @@ def get_images(prompt_id, server_address, allow_preview=False):
         for image in node_output.get('images', []):
             output_data = {}
             try:
-                print(f"Retrieving image: {image['filename']} from {image['subfolder']}")
                 image_data = get_image(image['filename'], image['subfolder'], image['type'], server_address)
                 output_data['image_data'] = image_data
                 output_data['file_name'] = image['filename']
                 output_data['type'] = image['type']
                 output_images.append(output_data)
-                print(f"Retrieved image data for: {image['filename']}")
             except Exception as e:
                 print(f"Failed to retrieve image {image['filename']}: {e}")
-        print("output_images: " + str(output_images))
     return output_images
 
+
+def upload_to_s3(image_data, file_name):
+    try:
+        s3_client = boto3.client('s3')
+        s3_key = f"{FOLDER_NAME}{file_name}"
+        s3_client.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=image_data, ContentType='image/png')
+        print(f"Successfully uploaded {file_name} to S3 in folder {FOLDER_NAME}.")
+    except (NoCredentialsError, PartialCredentialsError) as e:
+        print(f"Credentials error while uploading {file_name} to S3: {e}")
+    except Exception as e:
+        print(f"Failed to upload {file_name} to S3: {e}")

@@ -2,7 +2,7 @@ from workflow_apis.api.api_helpers import generate_image_by_prompt
 import json
 import random
 
-def prompt_to_image(workflow, positive_prompt):
+def prompt_to_image(workflow, positive_prompt, bucket_name, folder):
     try:
         print("Inside prompt_to_image")
         prompt = json.loads(workflow)
@@ -16,7 +16,7 @@ def prompt_to_image(workflow, positive_prompt):
 
         print("Heading to generate_image_by_prompt")
         image_paths = generate_image_by_prompt(prompt)
-        print("image paths: " + str(image_paths))
+        
         return image_paths
     except Exception as e:
         print(f"Error in prompt_to_image: {e}")

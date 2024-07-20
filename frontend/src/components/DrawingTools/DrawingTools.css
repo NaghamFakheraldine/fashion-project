@@ -32,6 +32,12 @@
   transition: color 0.3s ease, transform 0.3s ease;
 }
 
+@media (max-height: 780px) {
+  .tool-icon {
+    font-size: 14px; 
+  }
+}
+
 .tool-icon:hover {
   color: #4caf50;
   transform: scale(1.1);

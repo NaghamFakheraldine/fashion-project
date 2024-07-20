@@ -5,14 +5,19 @@ from flask import Flask, redirect, url_for, request, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import math
+
+import requests
 from workflow_apis.actions.prompt_to_image import prompt_to_image
-from workflow_apis.api.load_workflow import load_workflow
 from workflow_apis.actions.image_to_image import prompt_image_to_image
+from workflow_apis.api.load_workflow import load_workflow
 import os
 
 ALLOWED_EXTENSIONS = {'png', 'jpeg'}
+fclip_api_url = "http://34.240.213.100:5004/search"
 T2I_WORKFLOW_PATH = 'workflow_apis/workflows/T2I_workflow.json'
 R2I_WORKFLOW_PATH = 'workflow_apis/workflows/Ref2ImageAPI.json'
+S2I_WORKFLOW_PATH = 'workflow_apis/workflows/Ref2ImageAPI.json'
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -39,8 +44,6 @@ def create_app():
         try:
             bucket_name = "image-flask-project"
             data = request.get_json()
-
-            # print("Received data:", data)
             
             image_data = data["imageData"]
             uploaded_filename = data.get('originalFilename', 'image.png')
@@ -81,20 +84,27 @@ def create_app():
 
     @app.route("/api/get-images", methods=["GET"])
     def get_images():
+        folder = request.args.get('folder', '') 
+
+        if not folder:
+            return jsonify({"error": "Folder parameter is required"}), 400
+
         try:
             s3_client = boto3.client("s3")
-            response = s3_client.list_objects_v2(Bucket=app.config["IMAGE_BUCKET"])
+            response = s3_client.list_objects_v2(Bucket=app.config["IMAGE_BUCKET"], Prefix=folder)
 
             images = []
             for content in response.get("Contents", []):
-                image_url = f"https://{app.config['IMAGE_BUCKET']}.s3.amazonaws.com/{content['Key']}"
-                images.append({"url": image_url})
+                if not content['Key'].endswith('/'):
+                    image_url = f"https://{app.config['IMAGE_BUCKET']}.s3.amazonaws.com/{content['Key']}"
+                    images.append({"url": image_url})
 
             return jsonify({"images": images})
 
         except Exception as e:
             print(f"Error getting images from S3: {e}")
             return jsonify({"error": "Failed to retrieve images"}), 500
+
 
     @app.route("/api/update-image", methods=["POST"])
     def update_image():
@@ -153,17 +163,15 @@ def create_app():
             end_index = min(start_index + images_per_page, len(images))
             paginated_images = images[start_index:end_index]
 
-            # print("Images:", images)  # Inspect the images data here
             return jsonify({"images": paginated_images, "totalPages": math.ceil(len(images) / images_per_page)})
 
         except Exception as e:
             print(f"Error getting images from S3: {e}")
             return jsonify({"error": "Failed to retrieve images"}), 500
-
+    
     @app.route("/api/generate-image-from-prompt", methods=["POST"])
     def generate_image_from_prompt():
         try:
-            # Ensure the request content type is JSON
             if request.content_type != 'application/json':
                 return jsonify({"error": "Content-Type must be application/json"}), 415
 
@@ -172,24 +180,22 @@ def create_app():
             positive_prompt = data.get("positive_prompt", "")
 
             if not positive_prompt:
-                return jsonify({"error": "Positive prompt is required"}), 400
+                return jsonify({"error": "positive_prompt is required"}), 400
 
             workflow_json = load_workflow(T2I_WORKFLOW_PATH)
             print("Workflow loaded successfully!")
             if workflow_json is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_to_image(workflow_json, positive_prompt)
+            encoded_images = prompt_to_image(workflow_json, positive_prompt, app.config["IMAGE_BUCKET"], 'HistoryData')
             if not encoded_images:
                 return jsonify({"error": "Image generation failed"}), 500
 
-            print('Encoded images: ' + str(encoded_images))
             return jsonify({"message": "Image generation successful", "images": encoded_images})
 
         except Exception as e:
             print(f"Error generating image: {str(e)}")
             return jsonify({"error": "Failed to generate image"}), 500
-
 
     @app.route("/api/generate-image-from-reference", methods=["POST"])
     def generate_image_from_reference():
@@ -208,20 +214,67 @@ def create_app():
                 return jsonify({'error': f'Failed to decode image: {e}'}), 500
 
             workflow = load_workflow(R2I_WORKFLOW_PATH)
-            print("Workflow loaded successfully!")
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text)
-
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, app.config["IMAGE_BUCKET"], 'HistoryData')
             if not encoded_images:
                 return jsonify({'error': 'Failed to generate image'}), 500
 
             return jsonify({'images': encoded_images}), 200
-
         except Exception as e:
-            print(f"Error generating image: {str(e)}")
-            return jsonify({"error": "Failed to generate image"}), 500
+            return jsonify({"error": f"Failed to generate image: {e}"}), 500
+
+    @app.route("/api/generate-image-from-sketch", methods=["POST"])
+    def generate_image_from_sketch():
+        try:
+            data = request.get_json()
+            if not data or 'image' not in data or 'positive_prompt' not in data:
+                return jsonify({'error': 'Invalid input'}), 400
+
+            image_base64 = data['image']
+            prompt_text = data['positive_prompt']
+
+            # Decode the base64 image
+            try:
+                input_image_data = base64.b64decode(image_base64)
+            except Exception as e:
+                return jsonify({'error': f'Failed to decode image: {e}'}), 500
+
+            workflow = load_workflow(S2I_WORKFLOW_PATH)
+            if workflow is None:
+                return jsonify({"error": "Failed to load workflow"}), 500
+
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, app.config["IMAGE_BUCKET"], 'HistoryData')
+            if not encoded_images:
+                return jsonify({'error': 'Failed to generate image'}), 500
+
+            return jsonify({'images': encoded_images}), 200
+        except Exception as e:
+            return jsonify({"error": f"Failed to generate image: {e}"}), 500
+
+    @app.route('/api/get-sorted-indices', methods=['POST'])
+    def get_sorted_indices():
+        query = request.json.get('query')
+        if not query:
+            return jsonify({"error": "Query parameter is required"}), 400
+        
+        try:
+            print('Sending Request')
+            response = requests.post(fclip_api_url, json={"query": query}, timeout=60)
+            response.raise_for_status()
+            print('Response Received')
+            data = response.json()
+            print('Data Extracted')
+
+            sorted_indices = data.get('sorted_indices')
+            if sorted_indices is None:
+                return jsonify({"error": "sorted_indices not found in the API response"}), 400
+
+            return jsonify({"sorted_indices": sorted_indices})
+
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": str(e)}), 500
 
     return app
 

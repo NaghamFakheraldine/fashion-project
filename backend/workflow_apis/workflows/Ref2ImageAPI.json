@@ -109,16 +109,6 @@
       "title": "VAE Decode"
     }
   },
-  "77": {
-    "inputs": {
-      "image": "",
-      "upload": "image"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "Load Image"
-    }
-  },
   "79": {
     "inputs": {
       "lora_name": "ElieSaabLoraV2.safetensors",
@@ -195,7 +185,7 @@
       "low_threshold": 0.01,
       "high_threshold": 0.1,
       "image": [
-        "77",
+        "132",
         0
       ]
     },
@@ -427,6 +417,15 @@
     "class_type": "KSamplerAdvanced",
     "_meta": {
       "title": "KSampler (Advanced)"
+    }
+  },
+  "132": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "ETN_LoadImageBase64",
+    "_meta": {
+      "title": "Load Image (Base64)"
     }
   }
 }

@@ -1,28 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import DraggableSavedImage from "./DraggableSavedImage/DraggableSavedImage";
+import images from "../../ImageImporter";
 
-const SavedImagesContainer = () => {
+const imagesArray = Object.values(images);
+
+const SavedImagesContainer = ({ generatedImages }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const imagesPerPage = 16;
-  const [images, setImages] = useState([]);
-  const [totalPages, setTotalPages] = useState(0);
-
-  const fetchImages = async (page = 0) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/get-paginated-images?page=${page}&imagesPerPage=${imagesPerPage}`
-      );
-      const data = await response.json();
-      setImages(data.images);
-      setTotalPages(data.totalPages);
-    } catch (error) {
-      console.error("Error fetching images:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchImages(currentPage);
-  }, [currentPage]);
 
   const handleNextPage = () => {
     if ((currentPage + 1) * imagesPerPage < images.length) {
@@ -36,39 +20,91 @@ const SavedImagesContainer = () => {
     }
   };
 
+  const startIndex = currentPage * imagesPerPage;
+  const endIndex = startIndex + imagesPerPage;
+  const currentImages = generatedImages.slice(startIndex, endIndex);
+
   return (
     <div
       style={{
-        width: "100%",
+        width: "99%",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
-        paddingTop: "40px",
+        border: "1px solid #ccc",
+        borderRadius: "10px",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+        marginTop: "20px",
+        backgroundColor: "#f8f8f8",
+        padding: "10px",
       }}
     >
-      <button onClick={handlePreviousPage} disabled={currentPage === 0}>
-        &lt;
-      </button>
+      <h3 style={{ margin: "10px 0", color: "#333" }}>Saved Images</h3>
       <div
         style={{
-          display: "flex",
-          overflowX: "auto",
           width: "100%",
-          height: "200px",
-          justifyContent: "center",
+          display: "flex",
+          alignItems: "center",
         }}
       >
-        {images.map((img, index) => (
-          <div key={index} style={{ flex: "0 0 100px", margin: "0 5px" }}>
-            <DraggableSavedImage image={img.url} />
-          </div>
-        ))}
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 0}
+          style={{
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            padding: "8px 16px",
+            cursor: currentPage === 0 ? "not-allowed" : "pointer",
+            opacity: currentPage === 0 ? 0.5 : 1,
+            marginRight: "10px",
+          }}
+        >
+          &lt;
+        </button>
+        <div
+          style={{
+            display: "flex",
+            overflowX: "auto",
+            width: "100%",
+            height: "140px",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "10px",
+          }}
+        >
+          {currentImages.map((img, index) => (
+            <div
+              key={index}
+              style={{
+                flex: "0 0 100px",
+                margin: "0 5px",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <DraggableSavedImage image={img} />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={handleNextPage}
+          disabled={endIndex >= imagesArray.length}
+          style={{
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            padding: "8px 16px",
+            cursor: endIndex >= imagesArray.length ? "not-allowed" : "pointer",
+            opacity: endIndex >= imagesArray.length ? 0.5 : 1,
+            marginLeft: "10px",
+          }}
+        >
+          &gt;
+        </button>
       </div>
-      <button
-        onClick={handleNextPage}
-        disabled={currentPage === totalPages - 1}
-      >
-        &gt;
-      </button>
     </div>
   );
 };

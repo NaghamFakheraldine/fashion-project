@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 
-const SearchBar = ({ setImgInImageContainer }) => {
-  const [prompt, setPrompt] = useState("");
-
-  const sendPrompt = (prompt) => {
-    console.log(prompt);
-  };
-
+const SearchBar = ({
+  prompt,
+  setPrompt,
+  promptToImage,
+  promptToImageWithReference,
+  selectedTrainingImage,
+}) => {
   return (
     <div
       style={{
@@ -32,7 +32,9 @@ const SearchBar = ({ setImgInImageContainer }) => {
         value={prompt}
       />
       <button
-        onClick={() => sendPrompt(prompt)}
+        onClick={
+          selectedTrainingImage ? promptToImageWithReference : promptToImage
+        }
         style={{
           padding: "10px 20px",
           borderRadius: "0 20px 20px 0",

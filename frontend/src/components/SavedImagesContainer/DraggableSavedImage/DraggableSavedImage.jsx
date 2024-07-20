@@ -4,7 +4,7 @@ import { useDrag } from "react-dnd";
 const DraggableSavedImage = ({ image }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "savedImage",
-    item: { image },
+    item: { image: image.encoded_image_data },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -13,7 +13,7 @@ const DraggableSavedImage = ({ image }) => {
   return (
     <img
       ref={drag}
-      src={image}
+      src={image.encoded_image_data}
       alt="saved"
       style={{
         width: "100%",
