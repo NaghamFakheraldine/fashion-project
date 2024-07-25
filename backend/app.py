@@ -16,7 +16,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpeg'}
 fclip_api_url = "http://34.240.213.100:5004/search"
 T2I_WORKFLOW_PATH = 'workflow_apis/workflows/T2I_workflow.json'
 R2I_WORKFLOW_PATH = 'workflow_apis/workflows/Ref2ImageAPI.json'
-S2I_WORKFLOW_PATH = 'workflow_apis/workflows/Ref2ImageAPI.json'
+S2I_WORKFLOW_PATH = 'workflow_apis/workflows/S2I_workflow.json'
 
 
 def allowed_file(filename):
@@ -187,7 +187,7 @@ def create_app():
             if workflow_json is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_to_image(workflow_json, positive_prompt, app.config["IMAGE_BUCKET"], 'HistoryData')
+            encoded_images = prompt_to_image(workflow_json, positive_prompt)
             if not encoded_images:
                 return jsonify({"error": "Image generation failed"}), 500
 
@@ -217,7 +217,7 @@ def create_app():
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, app.config["IMAGE_BUCKET"], 'HistoryData')
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = False)
             if not encoded_images:
                 return jsonify({'error': 'Failed to generate image'}), 500
 
@@ -245,7 +245,7 @@ def create_app():
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, app.config["IMAGE_BUCKET"], 'HistoryData')
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = True)
             if not encoded_images:
                 return jsonify({'error': 'Failed to generate image'}), 500
 
