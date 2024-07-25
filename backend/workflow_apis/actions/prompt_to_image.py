@@ -2,7 +2,7 @@ from workflow_apis.api.api_helpers import generate_image_by_prompt
 import json
 import random
 
-def prompt_to_image(workflow, positive_prompt, bucket_name, folder):
+def prompt_to_image(workflow, positive_prompt):
     try:
         print("Inside prompt_to_image")
         prompt = json.loads(workflow)

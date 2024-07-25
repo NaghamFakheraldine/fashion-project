@@ -7,6 +7,7 @@ from flask_cors import CORS
 import math
 
 import requests
+from workflow_apis.api.api_helpers import generate_3D_from_2D
 from workflow_apis.actions.prompt_to_image import prompt_to_image
 from workflow_apis.actions.image_to_image import prompt_image_to_image
 from workflow_apis.api.load_workflow import load_workflow
@@ -17,7 +18,7 @@ fclip_api_url = "http://34.240.213.100:5004/search"
 T2I_WORKFLOW_PATH = 'workflow_apis/workflows/T2I_workflow.json'
 R2I_WORKFLOW_PATH = 'workflow_apis/workflows/Ref2ImageAPI.json'
 S2I_WORKFLOW_PATH = 'workflow_apis/workflows/S2I_workflow.json'
-
+I23D_WORKFLOW_PATH = 'workflow_apis/workflows/I23D_workflow.json'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -252,6 +253,34 @@ def create_app():
             return jsonify({'images': encoded_images}), 200
         except Exception as e:
             return jsonify({"error": f"Failed to generate image: {e}"}), 500
+        
+    @app.route("/api/generate-2D-from-3D", methods=["POST"])
+    def generate_2d_from_3d():
+        try:
+            data = request.get_json()
+            if 'image' not in data:
+                return jsonify({'error': 'Invalid input'}), 400
+
+            image_base64 = data['image']
+
+            # Decode the base64 image
+            try:
+                input_image_data = base64.b64decode(image_base64)
+            except Exception as e:
+                return jsonify({'error': f'Failed to decode image: {e}'}), 500
+
+            workflow = load_workflow(I23D_WORKFLOW_PATH)
+            if workflow is None:
+                return jsonify({"error": "Failed to load workflow"}), 500
+
+            video = generate_3D_from_2D(workflow, input_image_data)
+            if not video:
+                return jsonify({'error': 'Failed to generate video'}), 500
+
+            return jsonify({'video': video}), 200
+        except Exception as e:
+            return jsonify({"error": f"Failed to generate video: {e}"}), 500
+
 
     @app.route('/api/get-sorted-indices', methods=['POST'])
     def get_sorted_indices():

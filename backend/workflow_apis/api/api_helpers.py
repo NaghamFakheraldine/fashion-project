@@ -10,6 +10,48 @@ BUCKET_NAME = 'image-flask-project'
 FOLDER_NAME = 'HistoryData/'
 
 
+def generate_3D_from_2D(workflow, input_image_data):
+    try:
+        ws, server_address, client_id = open_websocket_connection()
+
+        prompt = json.loads(workflow)
+        
+        # Updating prompt to use base64 encoded image
+        input_image_base64 = base64.b64encode(input_image_data).decode('utf-8')
+
+
+        upload_image(input_image_base64, 'input_image.png', server_address)
+
+        print('Done with upload Image')
+
+        prompt_response = queue_prompt(prompt, client_id, server_address)
+        prompt_id = prompt_response.get('prompt_id')
+        if not prompt_id:
+            raise ValueError("Failed to get prompt_id from queue_prompt response")
+
+        print('Done with prompt_response')
+
+        track_progress(prompt, ws, prompt_id)
+
+        print('Done with track_progress')
+        # Get the generated video
+        video = get_video(prompt_id, server_address)
+
+        print('Done with get_video')
+
+        if video:
+            upload_to_s3(video, 'generated_video.mp4')
+
+        print('Done with upload_to_s3 test')
+
+        return base64.b64encode(video).decode('utf-8')
+    except Exception as e:
+        print(f"Error in generate_3D_from_2D: {e}")
+        return None
+    finally:
+        if ws:
+            ws.close()
+
 def generate_image_by_prompt_and_image(prompt, input_image_bytes):
     ws = None
     try:
@@ -152,3 +194,21 @@ def upload_to_s3(image_data, file_name):
         print(f"Credentials error while uploading {file_name} to S3: {e}")
     except Exception as e:
         print(f"Failed to upload {file_name} to S3: {e}")
+
+
+def get_video(prompt_id, server_address):
+    output_video = None
+    history = get_history(prompt_id, server_address).get(prompt_id, {})
+
+    if not history:
+        print("No history found for this prompt_id.")
+        return output_video
+
+    for node_id in history.get('outputs', {}):
+        node_output = history['outputs'][node_id]
+        if 'video' in node_output:
+            video_data = get_image(node_output['video']['filename'], node_output['video']['subfolder'], node_output['video']['type'], server_address)
+            output_video = video_data
+            break
+
+    return output_video

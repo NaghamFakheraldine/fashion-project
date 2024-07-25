@@ -65,3 +65,4 @@ def upload_image(input_image_bytes, name, server_address, image_type="input", ov
     request = urllib.request.Request(f"http://{server_address}/upload/image", data=multipart_data.to_string(), headers=headers)
     with urllib.request.urlopen(request) as response:
         return response.read()
+
