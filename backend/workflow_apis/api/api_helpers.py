@@ -13,15 +13,12 @@ FOLDER_NAME = 'HistoryData/'
 def generate_3D_from_2D(workflow, input_image_data):
     try:
         ws, server_address, client_id = open_websocket_connection()
-
         prompt = json.loads(workflow)
         
         # Updating prompt to use base64 encoded image
         input_image_base64 = base64.b64encode(input_image_data).decode('utf-8')
 
-
         upload_image(input_image_base64, 'input_image.png', server_address)
-
         print('Done with upload Image')
 
         prompt_response = queue_prompt(prompt, client_id, server_address)
@@ -32,19 +29,18 @@ def generate_3D_from_2D(workflow, input_image_data):
         print('Done with prompt_response')
 
         track_progress(prompt, ws, prompt_id)
-
         print('Done with track_progress')
+
         # Get the generated video
         video = get_video(prompt_id, server_address)
-
         print('Done with get_video')
 
         if video:
             upload_to_s3(video, 'generated_video.mp4')
+            print('Done with upload_to_s3 test')
 
-        print('Done with upload_to_s3 test')
-
-        return base64.b64encode(video).decode('utf-8')
+        print('video: ' + str(video))
+        return base64.b64encode(video).decode('utf-8') if video else None
     except Exception as e:
         print(f"Error in generate_3D_from_2D: {e}")
         return None
@@ -207,8 +203,13 @@ def get_video(prompt_id, server_address):
     for node_id in history.get('outputs', {}):
         node_output = history['outputs'][node_id]
         if 'video' in node_output:
-            video_data = get_image(node_output['video']['filename'], node_output['video']['subfolder'], node_output['video']['type'], server_address)
-            output_video = video_data
+            try:
+                video_data = get_image(node_output['video']['filename'], node_output['video']['subfolder'], node_output['video']['type'], server_address)
+                output_video = video_data
+                print(f"Video data retrieved: {len(video_data)} bytes")
+            except Exception as e:
+                print(f"Failed to retrieve video {node_output['video']['filename']}: {e}")
             break
 
     return output_video
+

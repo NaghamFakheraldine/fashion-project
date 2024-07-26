@@ -218,7 +218,7 @@ def create_app():
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = False)
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = None)
             if not encoded_images:
                 return jsonify({'error': 'Failed to generate image'}), 500
 
@@ -246,7 +246,36 @@ def create_app():
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = True)
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = 'COLORED_SKETCH')
+            if not encoded_images:
+                return jsonify({'error': 'Failed to generate image'}), 500
+
+            return jsonify({'images': encoded_images}), 200
+        except Exception as e:
+            return jsonify({"error": f"Failed to generate image: {e}"}), 500
+        
+
+    @app.route("/api/generate-image-from-lineart", methods=["POST"])
+    def generate_image_from_lineart():
+        try:
+            data = request.get_json()
+            if not data or 'image' not in data or 'positive_prompt' not in data:
+                return jsonify({'error': 'Invalid input'}), 400
+
+            image_base64 = data['image']
+            prompt_text = data['positive_prompt']
+
+            # Decode the base64 image
+            try:
+                input_image_data = base64.b64decode(image_base64)
+            except Exception as e:
+                return jsonify({'error': f'Failed to decode image: {e}'}), 500
+
+            workflow = load_workflow(S2I_WORKFLOW_PATH)
+            if workflow is None:
+                return jsonify({"error": "Failed to load workflow"}), 500
+
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = 'LINEART')
             if not encoded_images:
                 return jsonify({'error': 'Failed to generate image'}), 500
 
