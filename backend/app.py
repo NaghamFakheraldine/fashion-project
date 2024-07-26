@@ -19,6 +19,7 @@ T2I_WORKFLOW_PATH = 'workflow_apis/workflows/T2I_workflow.json'
 R2I_WORKFLOW_PATH = 'workflow_apis/workflows/Ref2ImageAPI.json'
 S2I_WORKFLOW_PATH = 'workflow_apis/workflows/S2I_workflow.json'
 I23D_WORKFLOW_PATH = 'workflow_apis/workflows/I23D_workflow.json'
+LA2I_WORKFLOW_PATH = 'workflow_apis/workflows/LA2I_workflow.json'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -271,7 +272,7 @@ def create_app():
             except Exception as e:
                 return jsonify({'error': f'Failed to decode image: {e}'}), 500
 
-            workflow = load_workflow(S2I_WORKFLOW_PATH)
+            workflow = load_workflow(LA2I_WORKFLOW_PATH)
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
