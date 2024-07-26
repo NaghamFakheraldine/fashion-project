@@ -11,13 +11,8 @@ def prompt_image_to_image(workflow, input_image_data, positive_prompt, sketch):
     # Updating prompt to use base64 encoded image
     input_image_base64 = base64.b64encode(input_image_data).decode('utf-8')
 
-    if(sketch == 'LINEART'):
+    if(sketch == True):
         prompt["205"]['inputs']['image'] = input_image_base64
-        prompt["158"]["inputs"]["seed"] = random.randint(10**14, 10**15 - 1)
-        prompt["150"]["inputs"]["text"] = "bged, " + positive_prompt
-        prompt["159"]["inputs"]["text"] = positive_prompt
-    elif(sketch == 'COLORED_SKETCH'):
-        prompt["202"]['inputs']['image'] = input_image_base64
         prompt["158"]["inputs"]["seed"] = random.randint(10**14, 10**15 - 1)
         prompt["150"]["inputs"]["text"] = "bged, " + positive_prompt
         prompt["159"]["inputs"]["text"] = positive_prompt

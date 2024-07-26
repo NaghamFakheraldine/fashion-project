@@ -219,7 +219,7 @@ def create_app():
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = None)
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = False)
             if not encoded_images:
                 return jsonify({'error': 'Failed to generate image'}), 500
 
@@ -247,7 +247,7 @@ def create_app():
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = 'COLORED_SKETCH')
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = True)
             if not encoded_images:
                 return jsonify({'error': 'Failed to generate image'}), 500
 
@@ -276,7 +276,7 @@ def create_app():
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = 'LINEART')
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = True)
             if not encoded_images:
                 return jsonify({'error': 'Failed to generate image'}), 500
 

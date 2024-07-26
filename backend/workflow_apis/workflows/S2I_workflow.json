@@ -1,364 +1,363 @@
 {
-    "37": {
-      "inputs": {
-        "seed": 536899008627761,
-        "steps": 6,
-        "cfg": 2,
-        "sampler_name": "dpmpp_sde",
-        "scheduler": "karras",
-        "denoise": 0.7000000000000001,
-        "model": [
-          "148",
-          0
-        ],
-        "positive": [
-          "151",
-          0
-        ],
-        "negative": [
-          "149",
-          0
-        ],
-        "latent_image": [
-          "204",
-          0
-        ]
-      },
-      "class_type": "KSampler",
-      "_meta": {
-        "title": "KSampler"
-      }
+  "37": {
+    "inputs": {
+      "seed": 536899008627761,
+      "steps": 6,
+      "cfg": 2,
+      "sampler_name": "dpmpp_sde",
+      "scheduler": "karras",
+      "denoise": 0.7000000000000001,
+      "model": [
+        "148",
+        0
+      ],
+      "positive": [
+        "151",
+        0
+      ],
+      "negative": [
+        "149",
+        0
+      ],
+      "latent_image": [
+        "204",
+        0
+      ]
     },
-    "124": {
-      "inputs": {
-        "pixels": [
-          "202",
-          0
-        ],
-        "vae": [
-          "148",
-          2
-        ]
-      },
-      "class_type": "VAEEncode",
-      "_meta": {
-        "title": "VAE Encode"
-      }
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "124": {
+    "inputs": {
+      "pixels": [
+        "205",
+        0
+      ],
+      "vae": [
+        "148",
+        2
+      ]
     },
-    "148": {
-      "inputs": {
-        "ckpt_name": "DreamShaperXL.safetensors"
-      },
-      "class_type": "CheckpointLoaderSimple",
-      "_meta": {
-        "title": "Load Checkpoint"
-      }
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "148": {
+    "inputs": {
+      "ckpt_name": "DreamShaperXL.safetensors"
     },
-    "149": {
-      "inputs": {
-        "text": "text, watermark, human, hands, legs, feet",
-        "clip": [
-          "148",
-          1
-        ]
-      },
-      "class_type": "CLIPTextEncode",
-      "_meta": {
-        "title": "CLIP Text Encode (Prompt)"
-      }
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "149": {
+    "inputs": {
+      "text": "text, watermark, human, hands, legs, feet",
+      "clip": [
+        "148",
+        1
+      ]
     },
-    "150": {
-      "inputs": {
-        "text": "bged, purple and black fancy dress with a purple gradient on stomach area, black skirt, sleevless, v-neckline"
-      },
-      "class_type": "TextInput_",
-      "_meta": {
-        "title": "Text Input (BGED)"
-      }
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "150": {
+    "inputs": {
+      "text": ""
     },
-    "151": {
-      "inputs": {
-        "text": [
-          "159",
-          0
-        ],
-        "clip": [
-          "148",
-          1
-        ]
-      },
-      "class_type": "CLIPTextEncode",
-      "_meta": {
-        "title": "CLIP Text Encode (Prompt)"
-      }
+    "class_type": "TextInput_",
+    "_meta": {
+      "title": "Text Input (BGED)"
+    }
+  },
+  "151": {
+    "inputs": {
+      "text": [
+        "159",
+        0
+      ],
+      "clip": [
+        "148",
+        1
+      ]
     },
-    "154": {
-      "inputs": {
-        "lora_name": "ElieSaabLoraV2.safetensors",
-        "strength_model": 1,
-        "strength_clip": 1,
-        "model": [
-          "148",
-          0
-        ],
-        "clip": [
-          "148",
-          1
-        ]
-      },
-      "class_type": "LoraLoader",
-      "_meta": {
-        "title": "Load LoRA"
-      }
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "154": {
+    "inputs": {
+      "lora_name": "ElieSaabLoraV2.safetensors",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": [
+        "148",
+        0
+      ],
+      "clip": [
+        "148",
+        1
+      ]
     },
-    "155": {
-      "inputs": {
-        "text": [
-          "150",
-          0
-        ],
-        "clip": [
-          "154",
-          1
-        ]
-      },
-      "class_type": "CLIPTextEncode",
-      "_meta": {
-        "title": "CLIP Text Encode (Prompt)"
-      }
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "155": {
+    "inputs": {
+      "text": [
+        "150",
+        0
+      ],
+      "clip": [
+        "154",
+        1
+      ]
     },
-    "158": {
-      "inputs": {
-        "seed": 495762946324576
-      },
-      "class_type": "Seed_",
-      "_meta": {
-        "title": "Seed_"
-      }
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "158": {
+    "inputs": {
+      "seed": 495762946324576
     },
-    "159": {
-      "inputs": {
-        "text": "purple and black fancy dress with a purple gradient on stomach area, black skirt, sleevless, v-neckline"
-      },
-      "class_type": "TextInput_",
-      "_meta": {
-        "title": "Text Input ♾️MixlabApp"
-      }
+    "class_type": "Seed_",
+    "_meta": {
+      "title": "Seed_"
+    }
+  },
+  "159": {
+    "inputs": {
+      "text": ""
     },
-    "168": {
-      "inputs": {
-        "control_net_name": "control-lora-canny-rank256.safetensors"
-      },
-      "class_type": "ControlNetLoader",
-      "_meta": {
-        "title": "Load ControlNet Model"
-      }
+    "class_type": "TextInput_",
+    "_meta": {
+      "title": "Text Input ♾️MixlabApp"
+    }
+  },
+  "168": {
+    "inputs": {
+      "control_net_name": "control-lora-canny-rank256.safetensors"
     },
-    "171": {
-      "inputs": {
-        "samples": [
-          "178",
-          0
-        ],
-        "vae": [
-          "148",
-          2
-        ]
-      },
-      "class_type": "VAEDecode",
-      "_meta": {
-        "title": "VAE Decode"
-      }
+    "class_type": "ControlNetLoader",
+    "_meta": {
+      "title": "Load ControlNet Model"
+    }
+  },
+  "171": {
+    "inputs": {
+      "samples": [
+        "178",
+        0
+      ],
+      "vae": [
+        "148",
+        2
+      ]
     },
-    "172": {
-      "inputs": {
-        "low_threshold": 0.01,
-        "high_threshold": 0.2,
-        "image": [
-          "171",
-          0
-        ]
-      },
-      "class_type": "Canny",
-      "_meta": {
-        "title": "Canny"
-      }
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "172": {
+    "inputs": {
+      "low_threshold": 0.01,
+      "high_threshold": 0.2,
+      "image": [
+        "171",
+        0
+      ]
     },
-    "173": {
-      "inputs": {
-        "strength": 1,
-        "start_percent": 0,
-        "end_percent": 1,
-        "positive": [
-          "155",
-          0
-        ],
-        "negative": [
-          "149",
-          0
-        ],
-        "control_net": [
-          "168",
-          0
-        ],
-        "image": [
-          "172",
-          0
-        ]
-      },
-      "class_type": "ControlNetApplyAdvanced",
-      "_meta": {
-        "title": "Apply ControlNet (Advanced)"
-      }
+    "class_type": "Canny",
+    "_meta": {
+      "title": "Canny"
+    }
+  },
+  "173": {
+    "inputs": {
+      "strength": 1,
+      "start_percent": 0,
+      "end_percent": 1,
+      "positive": [
+        "155",
+        0
+      ],
+      "negative": [
+        "149",
+        0
+      ],
+      "control_net": [
+        "168",
+        0
+      ],
+      "image": [
+        "172",
+        0
+      ]
     },
-    "174": {
-      "inputs": {
-        "add_noise": "disable",
-        "noise_seed": 272283754879857,
-        "steps": 6,
-        "cfg": 2,
-        "sampler_name": "dpmpp_sde",
-        "scheduler": "karras",
-        "start_at_step": 2,
-        "end_at_step": 4,
-        "return_with_leftover_noise": "disable",
-        "model": [
-          "154",
-          0
-        ],
-        "positive": [
-          "173",
-          0
-        ],
-        "negative": [
-          "173",
-          1
-        ],
-        "latent_image": [
-          "37",
-          0
-        ]
-      },
-      "class_type": "KSamplerAdvanced",
-      "_meta": {
-        "title": "KSampler (Advanced)"
-      }
+    "class_type": "ControlNetApplyAdvanced",
+    "_meta": {
+      "title": "Apply ControlNet (Advanced)"
+    }
+  },
+  "174": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": 272283754879857,
+      "steps": 6,
+      "cfg": 2,
+      "sampler_name": "dpmpp_sde",
+      "scheduler": "karras",
+      "start_at_step": 2,
+      "end_at_step": 4,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "154",
+        0
+      ],
+      "positive": [
+        "173",
+        0
+      ],
+      "negative": [
+        "173",
+        1
+      ],
+      "latent_image": [
+        "37",
+        0
+      ]
     },
-    "175": {
-      "inputs": {
-        "add_noise": "enable",
-        "noise_seed": 156547635772998,
-        "steps": 6,
-        "cfg": 2,
-        "sampler_name": "dpmpp_sde",
-        "scheduler": "karras",
-        "start_at_step": 2,
-        "end_at_step": 10000,
-        "return_with_leftover_noise": "disable",
-        "model": [
-          "148",
-          0
-        ],
-        "positive": [
-          "151",
-          0
-        ],
-        "negative": [
-          "173",
-          1
-        ],
-        "latent_image": [
-          "174",
-          0
-        ]
-      },
-      "class_type": "KSamplerAdvanced",
-      "_meta": {
-        "title": "KSampler (Advanced)"
-      }
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "175": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 156547635772998,
+      "steps": 6,
+      "cfg": 2,
+      "sampler_name": "dpmpp_sde",
+      "scheduler": "karras",
+      "start_at_step": 2,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "148",
+        0
+      ],
+      "positive": [
+        "151",
+        0
+      ],
+      "negative": [
+        "173",
+        1
+      ],
+      "latent_image": [
+        "174",
+        0
+      ]
     },
-    "176": {
-      "inputs": {
-        "samples": [
-          "175",
-          0
-        ],
-        "vae": [
-          "148",
-          2
-        ]
-      },
-      "class_type": "VAEDecode",
-      "_meta": {
-        "title": "VAE Decode"
-      }
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "176": {
+    "inputs": {
+      "samples": [
+        "175",
+        0
+      ],
+      "vae": [
+        "148",
+        2
+      ]
     },
-    "177": {
-      "inputs": {
-        "images": [
-          "176",
-          0
-        ]
-      },
-      "class_type": "PreviewImage",
-      "_meta": {
-        "title": "Preview Image"
-      }
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "177": {
+    "inputs": {
+      "images": [
+        "176",
+        0
+      ]
     },
-    "178": {
-      "inputs": {
-        "add_noise": "enable",
-        "noise_seed": 78790270540648,
-        "steps": 4,
-        "cfg": 2,
-        "sampler_name": "dpmpp_sde",
-        "scheduler": "karras",
-        "start_at_step": 3,
-        "end_at_step": 10000,
-        "return_with_leftover_noise": "disable",
-        "model": [
-          "154",
-          0
-        ],
-        "positive": [
-          "155",
-          0
-        ],
-        "negative": [
-          "149",
-          0
-        ],
-        "latent_image": [
-          "37",
-          0
-        ]
-      },
-      "class_type": "KSamplerAdvanced",
-      "_meta": {
-        "title": "KSampler (Advanced)"
-      }
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "178": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 78790270540648,
+      "steps": 4,
+      "cfg": 2,
+      "sampler_name": "dpmpp_sde",
+      "scheduler": "karras",
+      "start_at_step": 3,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "154",
+        0
+      ],
+      "positive": [
+        "155",
+        0
+      ],
+      "negative": [
+        "149",
+        0
+      ],
+      "latent_image": [
+        "37",
+        0
+      ]
     },
-    "202": {
-      "inputs": {
-        "image": "S2I_SampleInput.png",
-        "upload": "image"
-      },
-      "class_type": "LoadImage",
-      "_meta": {
-        "title": "Load Image"
-      }
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "204": {
+    "inputs": {
+      "amount": 4,
+      "samples": [
+        "124",
+        0
+      ]
     },
-    "204": {
-      "inputs": {
-        "amount": 4,
-        "samples": [
-          "124",
-          0
-        ]
-      },
-      "class_type": "RepeatLatentBatch",
-      "_meta": {
-        "title": "Repeat Latent Batch"
-      }
+    "class_type": "RepeatLatentBatch",
+    "_meta": {
+      "title": "Repeat Latent Batch"
+    }
+  },
+  "205": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "ETN_LoadImageBase64",
+    "_meta": {
+      "title": "Load Image (Base64)"
     }
   }
+}
