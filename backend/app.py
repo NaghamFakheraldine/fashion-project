@@ -20,6 +20,7 @@ R2I_WORKFLOW_PATH = 'workflow_apis/workflows/Ref2ImageAPI.json'
 S2I_WORKFLOW_PATH = 'workflow_apis/workflows/S2I_workflow.json'
 I23D_WORKFLOW_PATH = 'workflow_apis/workflows/I23D_workflow.json'
 LA2I_WORKFLOW_PATH = 'workflow_apis/workflows/LA2I_workflow.json'
+IN2I_WORKFLOW_PATH = 'workflow_apis/workflows/IN2I_workflow.json'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -284,14 +285,15 @@ def create_app():
         except Exception as e:
             return jsonify({"error": f"Failed to generate image: {e}"}), 500
         
-    @app.route("/api/generate-2D-from-3D", methods=["POST"])
-    def generate_2d_from_3d():
+    @app.route("/api/generate-image-from-inpainting", methods=["POST"])
+    def generate_image_from_inpainting():
         try:
             data = request.get_json()
-            if 'image' not in data:
+            if not data or 'image' not in data or 'positive_prompt' not in data:
                 return jsonify({'error': 'Invalid input'}), 400
 
             image_base64 = data['image']
+            prompt_text = data['positive_prompt']
 
             # Decode the base64 image
             try:
@@ -299,17 +301,44 @@ def create_app():
             except Exception as e:
                 return jsonify({'error': f'Failed to decode image: {e}'}), 500
 
-            workflow = load_workflow(I23D_WORKFLOW_PATH)
+            workflow = load_workflow(IN2I_WORKFLOW_PATH)
             if workflow is None:
                 return jsonify({"error": "Failed to load workflow"}), 500
 
-            video = generate_3D_from_2D(workflow, input_image_data)
-            if not video:
-                return jsonify({'error': 'Failed to generate video'}), 500
+            encoded_images = prompt_image_to_image(workflow, input_image_data, prompt_text, sketch = True)
+            if not encoded_images:
+                return jsonify({'error': 'Failed to generate image'}), 500
 
-            return jsonify({'video': video}), 200
+            return jsonify({'images': encoded_images}), 200
         except Exception as e:
-            return jsonify({"error": f"Failed to generate video: {e}"}), 500
+            return jsonify({"error": f"Failed to generate image: {e}"}), 500
+        
+    # @app.route("/api/generate-3D-from-2D", methods=["POST"])
+    # def generate_2d_from_3d():
+    #     try:
+    #         data = request.get_json()
+    #         if 'image' not in data:
+    #             return jsonify({'error': 'Invalid input'}), 400
+
+    #         image_base64 = data['image']
+
+    #         # Decode the base64 image
+    #         try:
+    #             input_image_data = base64.b64decode(image_base64)
+    #         except Exception as e:
+    #             return jsonify({'error': f'Failed to decode image: {e}'}), 500
+
+    #         workflow = load_workflow(I23D_WORKFLOW_PATH)
+    #         if workflow is None:
+    #             return jsonify({"error": "Failed to load workflow"}), 500
+
+    #         video = generate_3D_from_2D(workflow, input_image_data)
+    #         if not video:
+    #             return jsonify({'error': 'Failed to generate video'}), 500
+
+    #         return jsonify({'video': video}), 200
+    #     except Exception as e:
+    #         return jsonify({"error": f"Failed to generate video: {e}"}), 500
 
 
     @app.route('/api/get-sorted-indices', methods=['POST'])

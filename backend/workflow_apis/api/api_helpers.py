@@ -11,35 +11,27 @@ FOLDER_NAME = 'HistoryData/'
 
 
 def generate_3D_from_2D(workflow, input_image_data):
+    ws, server_address, client_id = None, None, None
     try:
         ws, server_address, client_id = open_websocket_connection()
         prompt = json.loads(workflow)
         
-        # Updating prompt to use base64 encoded image
+        # Update prompt to use base64 encoded image
         input_image_base64 = base64.b64encode(input_image_data).decode('utf-8')
-
         upload_image(input_image_base64, 'input_image.png', server_address)
-        print('Done with upload Image')
 
         prompt_response = queue_prompt(prompt, client_id, server_address)
         prompt_id = prompt_response.get('prompt_id')
         if not prompt_id:
             raise ValueError("Failed to get prompt_id from queue_prompt response")
 
-        print('Done with prompt_response')
-
         track_progress(prompt, ws, prompt_id)
-        print('Done with track_progress')
 
         # Get the generated video
         video = get_video(prompt_id, server_address)
-        print('Done with get_video')
-
         if video:
             upload_to_s3(video, 'generated_video.mp4')
-            print('Done with upload_to_s3 test')
 
-        print('video: ' + str(video))
         return base64.b64encode(video).decode('utf-8') if video else None
     except Exception as e:
         print(f"Error in generate_3D_from_2D: {e}")
@@ -192,6 +184,17 @@ def upload_to_s3(image_data, file_name):
         print(f"Failed to upload {file_name} to S3: {e}")
 
 
+def upload_video_to_s3(image_data, file_name):
+    try:
+        s3_client = boto3.client('s3')
+        s3_key = f"{FOLDER_NAME}{file_name}"
+        s3_client.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=image_data, ContentType='video/mp4')
+        print(f"Successfully uploaded {file_name} to S3 in folder {FOLDER_NAME}.")
+    except (NoCredentialsError, PartialCredentialsError) as e:
+        print(f"Credentials error while uploading {file_name} to S3: {e}")
+    except Exception as e:
+        print(f"Failed to upload {file_name} to S3: {e}")
+
 def get_video(prompt_id, server_address):
     output_video = None
     history = get_history(prompt_id, server_address).get(prompt_id, {})
@@ -212,4 +215,3 @@ def get_video(prompt_id, server_address):
             break
 
     return output_video
-
